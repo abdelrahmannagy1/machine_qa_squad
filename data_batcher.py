@@ -112,3 +112,34 @@ def refill_batches(batches, word2id, context_file, qn_file, ans_file, batch_size
     print "Refilling batches took %.2f seconds" % (toc-tic)
     return
 
+def get_batch_generator(word2id, context_path, qn_path, ans_path, batch_size, context_len, question_len, discard_long):
+    context_file, qn_file, ans_file = open(context_path), open(qn_path), open(ans_path)
+    batches[]
+    while True:
+        if len(batches) == 0: # add more batches
+            refill_batches(batches, word2id, context_file, qn_file, ans_file, batch_size, context_len, question_len, discard_long)
+        if len(batches) == 0:
+            break
+
+        # Get next batch. These are all lists length batch_size
+        (context_ids, context_tokens, qn_ids, qn_tokens, ans_span, ans_tokens) = batches.pop(0)
+
+        # Pad context_ids and qn_ids
+        qn_ids = padded(qn_ids, question_len) # pad questions to length question_len
+        context_ids = padded(context_ids, context_len) # pad contexts to length context_len
+
+        # Make qn_ids into a np array and create qn_mask
+        qn_ids = np.array(qn_ids) # shape (question_len, batch_size)
+        qn_mask = (qn_ids != PAD_ID).astype(np.int32) # shape (question_len, batch_size)
+
+        # Make context_ids into a np array and create context_mask
+        context_ids = np.array(context_ids) # shape (context_len, batch_size)
+        context_mask = (context_ids != PAD_ID).astype(np.int32) # shape (context_len, batch_size)
+
+        # Make ans_span into a np array
+        ans_span = np.array(ans_span) # shape (batch_size, 2)
+
+        # Make into a Batch object
+        batch = Batch(context_ids, context_mask, context_tokens, qn_ids, qn_mask, qn_tokens, ans_span, ans_tokens)
+
+        yield batch
